@@ -1,0 +1,154 @@
+import sys
+import pygame
+from pygame.locals import *
+
+
+def reset_screen():
+    # fill screen, create borders, and add start/end marks
+
+    screen.fill((0, 0, 255))
+
+    pygame.draw.lines(screen, black, True, ((0, 0), (600, 0), (600, 600), (0, 600)), 40)
+    pygame.draw.line(screen, white, (20, 100), (120, 100), 46)
+    pygame.draw.lines(screen, white, False, ((500, 20), (500, 200), (280, 200)), 46)
+    pygame.draw.lines(screen, white, False, ((420, 100), (200, 100), (200, 200), (100, 200), (100, 400),
+                                             (200, 400), (200, 500), (300, 500), (300, 300), (180, 300)), 46)
+    pygame.draw.lines(screen, white, False, ((20, 500), (120, 500)), 46)
+    pygame.draw.lines(screen, white, False, ((500, 280), (500, 350), (450, 350), (450, 580)), 46)
+    pygame.draw.line(screen, white, (320, 350), (370, 350), 46)
+    pygame.draw.line(screen, white, (400, 220), (400, 270), 46)
+    pygame.draw.line(screen, white, (300, 500), (300, 580), 46)
+    pygame.draw.line(screen, white, (348, 530), (348, 580), 49)
+    pygame.draw.line(screen, white, (430, 450), (380, 450), 46)
+    pygame.draw.line(screen, white, (498, 430), (498, 520), 49)
+
+    pygame.draw.circle(screen, green, (50, 50), radius)  # starting position
+    screen.blit(text1, textRect1)
+    pygame.draw.circle(screen, red, (500, 550), radius)  # ending position
+    screen.blit(text2, textRect2)
+
+
+def reset_circle():
+    # send circle back to starting position
+
+    reset_screen()
+    x, y = (50, 50)
+
+    return x, y
+
+
+def valid_move(x, y, x_change, y_change):
+    # verify next move is not outside the borders or on top of the maze walls
+
+    # location of the walls that the circle's centre could land on but shouldn't
+    invalid_spaces = [(500, 50),
+                      (50, 100), (100, 100), (200, 100), (250, 100), (300, 100), (350, 100), (400, 100), (500, 100),
+                      (200, 150), (500, 150),
+                      (100, 200), (150, 200), (200, 200), (300, 200), (350, 200), (400, 200), (450, 200), (500, 200),
+                      (100, 250), (400, 250),
+                      (100, 300), (200, 300), (250, 300), (300, 300), (500, 300),
+                      (100, 350), (300, 350), (350, 350), (450, 350), (500, 350),
+                      (100, 400), (150, 400), (200, 400), (300, 400), (450, 400),
+                      (200, 450), (300, 450), (400, 450), (450, 450), (500, 450),
+                      (50, 500), (100, 500), (200, 500), (250, 500), (300, 500), (450, 500), (500, 500),
+                      (300, 550), (350, 550), (450, 550)]
+
+    # x, y coordinates of next move
+    x_new = x + x_change
+    y_new = y + y_change
+
+    # check if inside borders
+    if x_new - radius < 10 or x_new + radius > 590:
+        x_new = x
+    if y_new - radius < 10 or y_new + radius > 590:
+        y_new = y
+
+    # check if next position isn't on top of a wall
+    for space in invalid_spaces:
+        if x_new == space[0] and y_new == space[1]:
+            return x, y
+
+    return x_new, y_new
+
+
+x, y = 50, 50  # circle starts at (50, 50)
+radius = 25  # radius of circle
+
+# colours used
+black = (0, 0, 0)
+white = (255, 255, 255)
+red = (255, 0, 0)
+green = (0, 255, 0)
+
+# initialise game
+pygame.init()
+
+# create display screen
+X, Y = (600, 600)  # dimensions of display screen
+screen = pygame.display.set_mode((X, Y))
+pygame.display.set_caption('MAZE GAME')  # title of display screen
+
+# settings for text
+font1 = pygame.font.Font('OCRAEXT.TTF', 15)
+font2 = pygame.font.Font('OCRAEXT.TTF', 50)
+text1 = font1.render('start', True, (0, 0, 0))
+text2 = font1.render('end', True, (0, 0, 0))
+text3 = font2.render('YOU WIN!!', True, (0, 50, 0))
+textRect1 = text1.get_rect(center=(50, 50))
+textRect2 = text2.get_rect(center=(500, 550))
+textRect3 = text3.get_rect(center=(300, 300))
+
+# setup maze on display with circle at starting position
+reset_screen()
+pygame.draw.circle(screen, (80, 200, 170), (x, y), radius)
+
+
+while True:
+
+    for event in pygame.event.get():
+
+        if event.type == KEYDOWN:  # if button pressed
+
+            x_change = 0
+            y_change = 0
+
+            if event.key == K_a or event.key == K_LEFT:
+                # move left
+                x_change = -50
+
+            elif event.key == K_d or event.key == K_RIGHT:
+                # move right
+                x_change = 50
+
+            elif event.key == K_w or event.key == K_UP:
+                # move up
+                y_change = -50
+
+            elif event.key == K_s or event.key == K_DOWN:
+                # move down
+                y_change = 50
+
+            elif event.key == K_r:
+                x, y = reset_circle()
+
+            elif event.key == K_BACKSPACE or event.key == K_ESCAPE:
+                # exit game
+                pygame.quit()
+                sys.exit()
+
+            x, y = valid_move(x, y, x_change, y_change)  # check if move is valid
+            reset_screen()  # reset screen to remove previous circle from screen
+            pygame.draw.circle(screen, (80, 200, 170), (x, y), radius)  # add new circle at new position
+
+            if (x, y) == (500, 550):  # if circle reaches end position
+                # display winning screen
+                screen.fill((255, 255, 255))
+                screen.blit(text3, textRect3)
+                pygame.display.update()
+
+                # wait for 10 seconds before exiting
+                pygame.time.wait(10000)
+                pygame.quit()
+                sys.exit()
+
+        pygame.display.update()  # update display with changes
